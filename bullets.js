@@ -1,118 +1,59 @@
 //COMPLETE
 
-var startFrameMillis = Date.now();
-var endFrameMillis = Date.now();
-var keyboard = new Keyboard();
-
-function getDeltaTime()
+var Bullet = function (x, y, moveRight)
 {
-	endFrameMillis = startFrameMillis;
-	startFrameMillis = Date.now();
-
-		// Find the delta time (dt) - the change in time since the last drawFrame
-		// We need to modify the delta time to something we can use.
-		// We want 1 to represent 1 second, so if the delta is in milliseconds
-		// we divide it by 1000 (or multiply by 0.001). This will make our 
-		// animations appear at the right speed, though we may need to use
-		// some large values to get objects movement and rotation correct
-	var deltaTime = (startFrameMillis - endFrameMillis) * 0.001;
+	this.sprite = new Sprite ("bullet.png");
+	this.sprite.buildAnimation (1, 1, 2, 32, 32, -1, [0]);
+	this.sprite.setAnimationOffset(0, 0, 0);
+	this.sprite.setLoop(0, false);
 	
-		// validate that the delta is within range
-	if(deltaTime > 1)
-		deltaTime = 1;
-		
-	return deltaTime;
-}
-
-var BULLET_SPEED = 10;
-var shoot = false;
-var shootTimer = 0;
-
-getDeltaTime();
-	
-var bullets = [];
-	
-var Bullets = function() {
-	this.image = document.createElement("img");
 	this.position = new Vector2();
-	this.position.set (player.position.x, player.position.y);
+	this.position.set(x,y);
 	
-	this.width = 5;
-	this.height = 5;
+	this.velocity = new Vector2();
 	
-	this.velocityX = 0;
-	this.velocityY = 0;
-	
-	this.image.src = "bullet.png";
-};	
-	
-function playerShoot()
-{
-	//start with velocity that shoots the bullet straight up
-	var velX = 0;
-	var velY = 10;
-	
-	//now rotate this vector according to the ships current rotation
-	var s = Math.sin (player.rotation);
-	var c = Math.cos (player.rotation);
-		
-	//for an explanation of this formula,
-	// see http://en.wikipedia.org/wiki/Rotation_matrix
-	var xVel = (velX * c) - (velY * s);
-	var yVel = (velX * s) + (velY * c);
-	
-	Bullets.velocityX = xVel * BULLET_SPEED ;
-	Bullets.velocityY = yVel * BULLET_SPEED ;
-	
-	//finally, add bullet to Bullets array
-	bullets.push(Bullets);
+	this.moveRight = moveRight;
+	if(this.moveRight == true)
+		this.velocity.set(MAXDX *2, 0);
+	else
+		this.velocity.set(-MAXDX *2, 0);
 }
 
+Bullet.prototype.update = function(deltaTime)
+{
+	this.sprite.update(dt);
+	this.position.x = Math.floor(this.position.x + (dt * this.velocity.x))
 	
-	//update bulets
 	for (var i=0; i<bullets.length; i++)
 	{
-	bullets[i].x += bullets[i].velocityX * deltaTime;
-	bullets[i].y += bullets[i].velocityY * deltaTime;
-	}
-	
-	for(var i=0; i<bullets.length; i++)
-	{
-		//check if the bullet has gone out of screen boundaries, if so kill
-		if(bullets[i].x < -bullets[i].width ||
-			bullets[i].x > SCREEN_WIDTH ||
-			bullets[i].y < -bullets[i].height ||
-			bullets[i].y > SCREEN_HEIGHT)
+		bullets[i].update(deltaTime);
+		if (bullets[i].position.x - worldOffsetX < 0 || bullets[i].position.x - worldOffsetX > SCREEN_WIDTH)
 		{
-		//remove 1 element at position i
-		bullets.splice(i,1);
-		//because we are deleting elements from middle
-		//we can only delete one at a time. 
-		//So as soon as we remove 1 bullet stop.
-		break;
+			hit = true;
+		}
+		
+		for (var j=0; j<enemies.length;j++)
+		{
+			if(intersects(bullets[i].position.x, bullets[i].position.y, TILE, TILE, enemies[j].position.x, enemies[j].position.y, TILE, TILE) == true)
+			{
+				//kill bullet and enemy
+				enemies.splice(j,1);
+				hit = true;
+				//increment player score
+				score += 1;
+				break
+			}
+		}
+		if(hit == true)
+		{
+			bullets.splice(i,1);
+			break;
 		}
 	}
-	
-	//draw all Bullets
-	for(var i=0; i<bullets.length; i++)
-	{
-		context.drawImage(bullets[i].image,
-			bullets[i].x - bullets[i].width/2,      
-			bullets[i].y - bullets[i].height/2);
-	}
-	
-	
-	
-	//check if any Bullets intersect any enemy if so kill both
-	for(var j=0; j<bullets.length; j++)
-	{
-		if(intersects(
-			bullets[j].x, bullets[j].y,
-			bullets[j].width, bullets[j].height,
-			Enemy.x, Enemy.y,
-			Enemy.width, Enemy.height) == true)
-	{
-			bullets.splice(j, 1);
-			break;
-	}
-	}
+}
+
+Bullet.prototype.draw = function()
+{
+	var screenX = this.position.x - worldOffSetX;
+	this.Sprite.draw(context, screenX, this.position.y);
+}

@@ -32,6 +32,14 @@ function getDeltaTime()
 var SCREEN_WIDTH = canvas.width;
 var SCREEN_HEIGHT = canvas.height;
 
+var musicBackground;
+var sfxFire;
+
+var score = 0;
+
+var bullets = [];
+var hit = false;
+
 var STATE_SPLASH = 0;
 var STATE_GAME = 1;
 var STATE_GAMEOVER = 2;
@@ -121,6 +129,25 @@ function initialize()
 			}
 		}
 	}
+	
+	musicBackground = new Howl (
+	{
+		urls: ["background.ogg"],
+		loop: true,
+		buffer: true,
+		volume: 0.5
+	} );
+	musicBackground.play();
+	
+	sfxFire = new Howl (
+	{
+		urls: ["fireEffect.ogg"],
+		buffer: true,
+		volume: 1,
+		onend: function() {
+			isSfxPlaying = false;
+		}
+	} );
 }
 
 function cellAtPixelCoord(layer, x,y)
@@ -216,7 +243,11 @@ function runGame (deltaTime)
 	context.fillStyle = "#ccc";		
 	context.fillRect(0, 0, canvas.width, canvas.height);
 	
-	drawMap ()
+	drawMap()
+	
+	context.fillStyle = "#8B008B";
+	context.font="20px Arial";
+	context.fillText("SCORE: " + score, 10, 470);
 	
 	player.update(deltaTime);
 	player.draw();
@@ -263,9 +294,7 @@ function runGameOver(deltaTime)
 }
 
 function run()
-{
-	
-	
+{	
 	var deltaTime = getDeltaTime();
 	
 	switch (gameState)

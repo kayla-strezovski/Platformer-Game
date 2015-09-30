@@ -1,3 +1,4 @@
+
 var LEFT = 0;
 var RIGHT = 1;
 
@@ -35,6 +36,8 @@ var Player = function() {
 	this.jumping = false;
 	
 	this.direction = LEFT;
+	
+	this.cooldownTimer = 0;
 };
 
 Player.prototype.update = function(deltaTime)
@@ -77,7 +80,7 @@ Player.prototype.update = function(deltaTime)
 		}
 	}
 	
-	if (keyboard.isKeyDown(keyboard.KEY_SPACE) == true)
+	if (keyboard.isKeyDown(keyboard.KEY_UP) == true)
 	{
 		jump = true;
 		if (left == true)
@@ -90,14 +93,14 @@ Player.prototype.update = function(deltaTime)
 		}
 	}
 	
-	if(keyboard.isKeyDown(keyboard.KEY_SHIFT) == true)
+	if (this.cooldownTimer >0)
 	{
-		shoot = true
-		if (shoot == true&& shootTimer <=0)
-		{
-			playerShoot()
-			shootTimer +=0.3
-		}
+		this.cooldownTimer -= deltaTime;
+	}
+	if(keyboard.isKeyDown(keyboard.KEY_SPACE) == true && this.cooldownTimer <=0)
+	{
+		sfxFire.play();
+		this.cooldownTimer = 0.3;
 	}
 	
 	var wasleft = this.velocity.x <0;
