@@ -2,6 +2,9 @@
 var LEFT = 0;
 var RIGHT = 1;
 
+var startTimer = 1;
+var respawnTimer = 0.5;
+
 var ANIM_IDLE_LEFT = 0;
 var ANIM_JUMP_LEFT = 1;
 var ANIM_WALK_LEFT = 2;
@@ -9,6 +12,8 @@ var ANIM_IDLE_RIGHT = 3;
 var ANIM_JUMP_RIGHT = 4;
 var ANIM_WALK_RIGHT = 5;
 var ANIM_MAX = 6;
+var SHOOT_RIGHT = 7;
+var SHOOT_LEFT = 8;
 
 var Player = function() {
 	this.sprite = new Sprite("ChuckNorris.png");
@@ -49,17 +54,19 @@ Player.prototype.update = function(deltaTime)
 	var jump = false;
 	
 	//check keypress events
-	if(keyboard.isKeyDown(keyboard.KEY_LEFT) == true)
+	if((keyboard.isKeyDown(keyboard.KEY_LEFT) == true) || (keyboard.isKeyDown(keyboard.KEY_A) == true))
 	{
 		left = true;
 		this.direction = LEFT;
+		Bullet.moveRight = false;
 		if (this.sprite.currentAnimation != ANIM_WALK_LEFT && this.jumping == false)
 			this.sprite.setAnimation(ANIM_WALK_LEFT);
 	}
-	else if(keyboard.isKeyDown(keyboard.KEY_RIGHT) == true) 
+	else if((keyboard.isKeyDown(keyboard.KEY_RIGHT) == true) || (keyboard.isKeyDown(keyboard.KEY_D) == true))
 	{
 		right = true;
 		this.direction = RIGHT;
+		Bullet.moveRight = true;
 		if (this.sprite.currentAnimation != ANIM_WALK_RIGHT && this.jumping == false)
 			this.sprite.setAnimation(ANIM_WALK_RIGHT);
 	}
@@ -80,9 +87,11 @@ Player.prototype.update = function(deltaTime)
 		}
 	}
 	
-	if (keyboard.isKeyDown(keyboard.KEY_UP) == true)
+	
+	if ((keyboard.isKeyDown(keyboard.KEY_UP) == true)|| (keyboard.isKeyDown(keyboard.KEY_W) == true))
 	{
 		jump = true;
+		sfxJump.play();
 		if (left == true)
 		{
 			this.sprite.setAnimation (ANIM_JUMP_LEFT);
@@ -93,14 +102,16 @@ Player.prototype.update = function(deltaTime)
 		}
 	}
 	
-	if (this.cooldownTimer >0)
+	if (this.cooldownTimer > 0)
 	{
 		this.cooldownTimer -= deltaTime;
 	}
+	
 	if(keyboard.isKeyDown(keyboard.KEY_SPACE) == true && this.cooldownTimer <=0)
 	{
 		sfxFire.play();
-		this.cooldownTimer = 0.3;
+		bullets.push(new Bullet (this.position.x, this.position.y, Bullet.moveRight));
+		this.cooldownTimer = 0.25;
 	}
 	
 	var wasleft = this.velocity.x <0;
@@ -206,13 +217,42 @@ Player.prototype.update = function(deltaTime)
 			this.velocity.x = 0;					//stop hosizontal velocity
 		}
 	}
+	
+	startTimer -= deltaTime;
+	respawnTimer -= deltaTime;
+	
+	if(startTimer <= 0 && (this.position.x <= -10 || this.position.x >=  TILE*MAP.tw || this.position.y <= -10 || this.position.y >= TILE*MAP.th ) )
+		{
+			this.position.set (9*TILE, 0*TILE);
+			sfxFall.play();
+			gameState = STATE_GAMEOVER
+			if (respawnTimer <= 0)
+			{
+				enemies = [];
+			}
+			restart ();	
+		}
+		
+		if(lives <= 0)
+		{
+			this.position.set (9*TILE, 0*TILE);
+			sfxSplat.play ();
+			gameState = STATE_GAMEOVER
+			if (respawnTimer <= 0)
+			{
+				enemies = [];
+			}
+			restart ();	
+		}
+			
+	
+	if(cellAtTileCoord(LAYER_OBJECT_TRIGGERS, tx, ty) == true)
+	{
+		gameState = STATE_GAMEOVER; 
+	}
 }
 
 Player.prototype.draw = function()
 {
-	this.sprite.draw(context, this.position.x, this.position.y);
-	//context.save();
-		//context.translate(this.position.x, this.position.y);
-		//context.drawImage(this.image, -this.width/2, -this.height/2);
-	//context.restore();
+	this.sprite.draw(context, this.position.x - worldOffsetX, this.position.y);
 }
