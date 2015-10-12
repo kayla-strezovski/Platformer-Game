@@ -242,7 +242,6 @@ function initialize()
 function restart ()
 {
 	lives = 3;
-	score = 0;
 				
 	for(var layerIdx = 0; layerIdx < LAYER_COUNT; layerIdx++) 
 	{ 
@@ -420,6 +419,8 @@ function runSplash (deltaTime)
 		return;
 	}
 	
+	score = 0;
+	
 	context.fillStyle = "#A52A2A";
 	context.fillRect(0, 0, canvas.width, canvas.height);
 	
@@ -551,6 +552,10 @@ function runGameOver(deltaTime)
 	context.fillStyle = "#000";
 	context.font= "72px Amerigo";
 	context.fillText("GAME OVER", 210 , 400);
+	
+	context.fillStyle = "#FFFFFF";
+	context.font="18px OCR A Std";
+	context.fillText("SCORE: " + score, 10, 470);
 	
 	context.fillStyle = "#FFFFFF";
 	context.font= "20px Amerigo";

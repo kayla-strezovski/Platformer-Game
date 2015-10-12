@@ -233,7 +233,7 @@ Player.prototype.update = function(deltaTime)
 			restart ();	
 		}
 		
-		if(lives <= 0)
+		if(startTimer <= 0 && (lives <= 0))
 		{
 			this.position.set (9*TILE, 0*TILE);
 			sfxSplat.play ();
@@ -249,6 +249,12 @@ Player.prototype.update = function(deltaTime)
 	if(cellAtTileCoord(LAYER_OBJECT_TRIGGERS, tx, ty) == true)
 	{
 		gameState = STATE_GAMEOVER; 
+		this.position.set (9*TILE, 0*TILE);
+		if (respawnTimer <= 0)
+		{
+			enemies = [];
+		}
+		restart ();
 	}
 }
 
